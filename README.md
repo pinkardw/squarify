@@ -122,3 +122,122 @@ The variable `rects` contains
   }
 ]
 ```
+
+The `Rectangle` class is necessary to plot nested treemaps with hierarchical 
+data. There are also different, recursive functions to create a nested treemap.
+
+Example
+-------
+
+```python
+import squarify
+import matplotlib.pyplot as plt
+
+# Define a hierarchy of Rectangle objects. In this case, Socks.
+socks = [Rectangle('All Socks', children = [
+          Rectangle('Blue Socks', value=10), 
+          Rectangle('Magenta Fabulous Socks', value=16), 
+          Rectangle('Green Socks', value=2), 
+          Rectangle('Orange Socks', value=26), 
+          Rectangle('Dryer Socks')])]
+
+# A function to supply colors is also required.
+def socks_color_and_alpha(rectangle):
+    if rectangle.children:
+        alpha = 0.25
+    else:
+        alpha = 1
+    
+    if rectangle.value == 0:
+        color = 'grey'
+    elif rectangle.value <= 2:
+        color = (3/255, 115/255, 77/255)
+    elif rectangle.value <= 10:
+        color = (24/255, 102/255, 180/255)
+    elif rectangle.value <= 16:
+        color = (215/255, 9/255, 71/255)
+    elif rectangle.value <= 26:
+        color = (204/255, 67/255, 0)
+    else:
+        color = (1, 1, 1)
+    
+    return color, alpha
+
+# These values define the coordinate system for the nested rectangles that 
+# make up the treemap.
+x, y, dx, dy = 0, 0, 100, 100
+
+# The Rectangles must be sorted by their nested sum, which is their own value, 
+# and the value of all Rectangles in the list of children. Values must be 
+# positive, and the sorted tree is in descending order.
+sort_nested(socks)
+
+# Adds a new 'rect' attribute to each Rectangle in the tree. Normalization is 
+# included in this function, since the plot area changes at different levels 
+# of the hierarchy. Padding is required for the nested treemap to have a 
+# sensible plot, and can be specified using the 'pad' parameter of the
+# squarify_nested function.
+squarify_nested(socks, x, y, dx, dy)
+
+# Set up the figure and axes to plot to.
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(111)
+
+# Plot the tree. The tree hierarchy, plot axis, and color function are 
+# required for the plot_nested function to work.
+plot_nested(socks, ax, socks_color_and_alpha)
+
+# Adjust some plot parameters.
+ax.axis('off')
+fig.tight_layout()
+```
+
+Sometimes it is useful to be able to plot a known category with an unknown 
+value, as with the dryer socks Rectangle. Seriously, where do they go!?
+
+There are also cases where a Rectangle will have a value *and* children.
+Let's say, for example, that a researcher administered a survey containing a 
+list of mythical creatures, and asked participants to mark all those which 
+they had heard of. Not wanting to display all the mythical creatures that 
+no one had heard of, he created the following plot.
+
+```python
+# Mythical creatures hierarchical tree
+mythical_creatures = [Rectangle('All Mythical Creatures', value=25, children = [
+                    Rectangle('Well-known Creatures', children = [
+                     Rectangle('Minotaur', value=7),
+                     Rectangle('Gargoyle', value=15),
+                     Rectangle('Dragon', value=10),
+                     Rectangle('Phoenix', value=10),
+                     Rectangle('Basilisk', value=5),
+                     Rectangle('Kraken', value=4)]),
+                    Rectangle('Ridable Creatures', children = [
+                     Rectangle('Griffin', value=10), 
+                     Rectangle('Unicorn', value=10), 
+                     Rectangle('Liger', value=5)])])]
+
+def simple_color_and_alpha(rectangle):
+    if rectangle.children:
+        alpha = 0.25
+    else:
+        alpha = 1
+    
+    if rectangle.children:
+        color = 'blue'
+    else:
+        color = 'grey'
+    
+    return color, alpha
+
+x, y, dx, dy = 0, 0, 100, 100
+sort_nested(mythical_creatures)
+squarify_nested(mythical_creatures, x, y, dx, dy)
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(111)
+plot_nested(mythical_creatures, ax, simple_color_and_alpha)
+ax.axis('off')
+fig.tight_layout()
+```
+
+This plot would indicate that there were 25 mythical creatures no one had 
+heard of, in addition to those that were familiar to some respondents.
